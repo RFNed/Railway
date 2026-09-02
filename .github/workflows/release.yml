@@ -2,8 +2,8 @@ name: release
 
 on:
     push:
-        branches:
-            - main
+        tags:
+            - "v*"
 
 jobs:
     build:
@@ -28,10 +28,20 @@ jobs:
             - name: Build
               run: dotnet build --no-restore --configuration Release
 
-            - name: Publish
-              run: dotnet publish --configuration Release --output ./publish
+            - name: Publish for Windows
+              run: dotnet publish --configuration Release --runtime win-x64 --self-contained false --output ./publish/win-x64
 
-            - name: Get latest tag
+            - name: Publish for Linux
+              run: dotnet publish --configuration Release --runtime linux-x64 --self-contained false --output ./publish/linux-x64
+
+            - name: Create archives
+              run: |
+                  cd ./publish
+                  zip -r ../Railway-Windows-x64.zip ./win-x64
+                  zip -r ../Railway-Linux-x64.zip ./linux-x64
+                  cd ..
+
+            - name: Get tag
               id: get_tag
               run: |
                   TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
@@ -39,12 +49,15 @@ jobs:
                   echo "Found tag: $TAG"
 
             - name: Create Release
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v2
               with:
-                  files: ./publish/**
-                  tag_name: v${{ github.run_number }}
-                  name: Release v${{ github.run_number }}
+                  files: |
+                      ./Railway-Windows-x64.zip
+                      ./Railway-Linux-x64.zip
+                  tag_name: ${{ steps.get_tag.outputs.TAG }}
+                  name: Release ${{ steps.get_tag.outputs.TAG }}
                   draft: false
                   prerelease: false
+                  generate_release_notes: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
