@@ -12,6 +12,8 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
             - name: Setup .NET
               uses: actions/setup-dotnet@v4
@@ -23,3 +25,24 @@ jobs:
 
             - name: Build
               run: dotnet build --no-restore --configuration Release
+
+            - name: Publish
+              run: dotnet publish --configuration Release --output ./publish
+
+            - name: Get latest tag
+              id: get_tag
+              run: |
+                  TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+                  echo "TAG=$TAG" >> $GITHUB_OUTPUT
+                  echo "Found tag: $TAG"
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: ./publish/**
+                  tag_name: v${{ github.run_number }}
+                  name: Release v${{ github.run_number }}
+                  draft: false
+                  prerelease: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
