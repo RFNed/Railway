@@ -1,17 +1,174 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Railway.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:vm="clr-namespace:RailwayApp.ViewModels"
         x:Class="Railway.Views.MainWindow"
-        x:DataType="vm:MainViewModel"
-        Title="Railway">
+        x:DataType="vm:MainWindowViewModel"
+        Title="Формирование составов"
+        Width="1024" Height="600"
+        FontFamily="Constantia"
+        Background="#FFFFFF"
+        Foreground="#405C73">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainViewModel />
-    </Design.DataContext>
+    <Window.Resources>
+        <SolidColorBrush x:Key="DataGridColumnHeaderBackgroundBrush" Color="#405C73"/>
+        <SolidColorBrush x:Key="DataGridColumnHeaderForegroundBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="DataGridHeaderBackgroundPointerOver" Color="#32495B"/>
+        <SolidColorBrush x:Key="DataGridHeaderForegroundPointerOver" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="DataGridHeaderBackgroundPressed" Color="#2A3D4C"/>
+        <SolidColorBrush x:Key="ComboBoxBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="ComboBoxForeground" Color="#405C73"/>
+        <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#BFD6F6"/>
+        <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#405C73"/>
+    </Window.Resources>
 
+    <Window.Styles>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="{StaticResource DataGridColumnHeaderBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource DataGridColumnHeaderForegroundBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        </Style>
+
+        <Style Selector="DataGridColumnHeader TextBlock">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+
+        <Style Selector="DataGridRow">
+            <Setter Property="Foreground" Value="#405C73"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+        </Style>
+        
+        <Style Selector="DataGridCell">
+            <Setter Property="Foreground" Value="#405C73"/>
+        </Style>
+
+        <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="#BFD6F6"/>
+            <Setter Property="Opacity" Value="0.4"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="Foreground" Value="#405C73"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#405C73"/>
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="Foreground" Value="#405C73"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#405C73"/>
+        </Style>
+
+        <Style Selector="ComboBoxItem">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#405C73"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto, *, Auto">
+
+        <Border Grid.Row="0" Background="#405C73" Padding="15">
+            <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <Border Width="32" Height="32" Background="#BFD6F6" CornerRadius="4">
+                        <TextBlock Text="🚂" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Формирование составов"
+                               FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Обновить" Command="{Binding LoadDataCommand}"
+                        Background="#BFD6F6" Foreground="#405C73" FontWeight="Bold" Padding="12,6"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="2*, 1*" Margin="10">
+
+            <Border Grid.Column="0" BorderBrush="#BFD6F6" BorderThickness="2" Margin="0,0,5,0" Padding="5">
+                <DataGrid ItemsSource="{Binding Trains}"
+                          SelectedItem="{Binding SelectedTrain}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="All"
+                          Background="#FFFFFF"
+                          Foreground="#405C73">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="№ Состава" Binding="{Binding TrainNumber}"/>
+                        <DataGridTextColumn Header="Отправление" Binding="{Binding DepartureCityName}"/>
+                        <DataGridTextColumn Header="Прибытие" Binding="{Binding ArrivalCityName}"/>
+                        <DataGridTextColumn Header="Дата/Время" Binding="{Binding FormationDatetime, StringFormat=\{0:dd.MM.yyyy HH:mm\}}"/>
+                        <DataGridTextColumn Header="Менеджер" Binding="{Binding ManagerName}"/>
+                        <DataGridTextColumn Header="Машинист" Binding="{Binding DriverName}"/>
+                        <DataGridTextColumn Header="Помощник" Binding="{Binding AssistantName}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <Border Grid.Column="1" Background="#BFD6F6" Padding="15" CornerRadius="5" Margin="5,0,0,0">
+                <ScrollViewer>
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Редактирование состава" FontSize="16" FontWeight="Bold" Foreground="#405C73"/>
+
+                        <TextBlock Text="Номер состава:" Foreground="#405C73"/>
+                        <TextBox Text="{Binding EditNumber}"/>
+
+                        <TextBlock Text="Пункт отправления:" Foreground="#405C73"/>
+                        <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding SelectedDepCity}" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" Foreground="#405C73"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="Пункт назначения:" Foreground="#405C73"/>
+                        <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding SelectedArrCity}" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" Foreground="#405C73"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="Ответственный менеджер:" Foreground="#405C73"/>
+                        <ComboBox ItemsSource="{Binding Managers}" SelectedItem="{Binding SelectedManager}" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" Foreground="#405C73"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="Машинист:" Foreground="#405C73"/>
+                        <ComboBox ItemsSource="{Binding Drivers}" SelectedItem="{Binding SelectedDriver}" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" Foreground="#405C73"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="Помощник машиниста:" Foreground="#405C73"/>
+                        <ComboBox ItemsSource="{Binding Assistants}" SelectedItem="{Binding SelectedAssistant}" HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" Foreground="#405C73"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <Button Content="Сохранить изменения" 
+                                Command="{Binding SaveTrainCommand}"
+                                Background="#405C73" Foreground="#FFFFFF" 
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                                Margin="0,15,0,0" Padding="10"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Background="#405C73" Padding="8,4">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#FFFFFF" FontSize="12"/>
+        </Border>
+    </Grid>
 </Window>

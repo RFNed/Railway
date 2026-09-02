@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Railway.ViewModels;
 using Railway.Views;
+using RailwayApp.ViewModels;
 
 namespace Railway;
 
@@ -19,7 +20,7 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel(),
+                DataContext = new MainWindowViewModel(),
             };
         }
 
