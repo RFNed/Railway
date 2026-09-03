@@ -16,9 +16,10 @@ public class DatabaseService
     }
 
     private MySqlConnection GetConnection() => new(_connectionString);
-    public async Task<List<TrainItem>> GetTrainsAsync()
+    
+    public async Task<List<Train>> GetTrainsAsync()
     {
-        var result = new List<TrainItem>();
+        var result = new List<Train>();
         await using var connection = GetConnection();
         await connection.OpenAsync();
 
@@ -43,7 +44,7 @@ public class DatabaseService
 
         while (await reader.ReadAsync())
         {
-            result.Add(new TrainItem
+            result.Add(new Train
             {
                 TrainId = reader.GetInt32("train_id"),
                 TrainNumber = reader.GetString("train_number"),
@@ -63,7 +64,8 @@ public class DatabaseService
 
         return result;
     }
-    public async Task<bool> UpdateTrainAsync(TrainItem train)
+
+    public async Task<bool> UpdateTrainAsync(Train train)
     {
         await using var connection = GetConnection();
         await connection.OpenAsync();
@@ -90,6 +92,7 @@ public class DatabaseService
         int affected = await cmd.ExecuteNonQueryAsync();
         return affected > 0;
     }
+
     public async Task<List<LookupItem>> GetCitiesAsync()
     {
         var list = new List<LookupItem>();
@@ -104,6 +107,7 @@ public class DatabaseService
         }
         return list;
     }
+
     public async Task<List<LookupItem>> GetEmployeesByRoleAsync(string role)
     {
         var list = new List<LookupItem>();

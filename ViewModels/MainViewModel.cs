@@ -16,12 +16,12 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly DatabaseService _dbService;
 
     [ObservableProperty]
-    private ObservableCollection<TrainItem> _trains = [];
+    private ObservableCollection<Train> _trains = [];
 
     [ObservableProperty]
-    private TrainItem? _selectedTrain;
+    private Train? _selectedTrain;
 
-    partial void OnSelectedTrainChanged(TrainItem? value)
+    partial void OnSelectedTrainChanged(Train? value)
     {
         LoadEditData();
     }

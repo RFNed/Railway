@@ -2,7 +2,7 @@ using System;
 
 namespace RailwayApp.Models;
 
-public class TrainItem
+public class Train
 {
     public int TrainId { get; set; }
     public string TrainNumber { get; set; } = string.Empty;
