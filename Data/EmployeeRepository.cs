@@ -52,10 +52,10 @@ public class EmployeeRepository
     {
         await conn.OpenAsync();
 
-        const string query = "SELECT * FROM employees WHERE employee_id = @employee_id;";
+        const string query = "SELECT * FROM employees WHERE employee_id = @employeeId;";
 
         await using var cmd = new MySqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@employee_id", employeeId);
+        cmd.Parameters.AddWithValue("@employeeId", employeeId);
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
