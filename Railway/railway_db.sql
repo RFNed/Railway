@@ -10,6 +10,8 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
+CREATE DATABASE IF NOT EXISTS `railway_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `railway_db`;
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -127,6 +129,7 @@ CREATE TABLE `wagon_types` (
   `description` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+
 --
 -- Индексы сохранённых таблиц
 --
@@ -147,7 +150,8 @@ ALTER TABLE `employees`
 -- Индексы таблицы `locomotives`
 --
 ALTER TABLE `locomotives`
-  ADD PRIMARY KEY (`locomotive_id`);
+  ADD PRIMARY KEY (`locomotive_id`),
+  ADD UNIQUE KEY `uq_locomotive_number` (`locomotive_number`);
 
 --
 -- Индексы таблицы `trains`
@@ -166,29 +170,31 @@ ALTER TABLE `trains`
 --
 ALTER TABLE `train_locomotives`
   ADD PRIMARY KEY (`train_locomotive_id`),
-  ADD KEY `train_id` (`train_id`),
-  ADD KEY `locomotive_id` (`locomotive_id`);
+  ADD UNIQUE KEY `uq_train_locomotive` (`locomotive_id`),
+  ADD KEY `train_id` (`train_id`);
 
 --
 -- Индексы таблицы `train_wagons`
 --
 ALTER TABLE `train_wagons`
   ADD PRIMARY KEY (`train_wagon_id`),
-  ADD KEY `train_id` (`train_id`),
-  ADD KEY `wagon_id` (`wagon_id`);
+  ADD UNIQUE KEY `uq_train_wagon` (`wagon_id`),
+  ADD KEY `train_id` (`train_id`);
 
 --
 -- Индексы таблицы `wagons`
 --
 ALTER TABLE `wagons`
   ADD PRIMARY KEY (`wagon_id`),
+  ADD UNIQUE KEY `uq_wagon_number` (`wagon_number`),
   ADD KEY `wagon_type_id` (`wagon_type_id`);
 
 --
 -- Индексы таблицы `wagon_types`
 --
 ALTER TABLE `wagon_types`
-  ADD PRIMARY KEY (`wagon_type_id`);
+  ADD PRIMARY KEY (`wagon_type_id`),
+  ADD UNIQUE KEY `uq_wagon_code` (`wagon_code`);
 
 --
 -- AUTO_INCREMENT для сохранённых таблиц
@@ -242,6 +248,43 @@ ALTER TABLE `wagons`
 ALTER TABLE `wagon_types`
   MODIFY `wagon_type_id` int NOT NULL AUTO_INCREMENT;
 
+-- Предопределённые пункты назначения и типы вагонов по ТЗ.
+INSERT INTO `cities` (`city_name`)
+SELECT 'Мурманск' WHERE NOT EXISTS (SELECT 1 FROM `cities` WHERE `city_name`='Мурманск');
+INSERT INTO `cities` (`city_name`)
+SELECT 'Кировск' WHERE NOT EXISTS (SELECT 1 FROM `cities` WHERE `city_name`='Кировск');
+INSERT INTO `cities` (`city_name`)
+SELECT 'Апатиты' WHERE NOT EXISTS (SELECT 1 FROM `cities` WHERE `city_name`='Апатиты');
+INSERT INTO `cities` (`city_name`)
+SELECT 'Вологда' WHERE NOT EXISTS (SELECT 1 FROM `cities` WHERE `city_name`='Вологда');
+INSERT INTO `cities` (`city_name`)
+SELECT 'Череповецк' WHERE NOT EXISTS (SELECT 1 FROM `cities` WHERE `city_name`='Череповецк');
+INSERT INTO `wagon_types` (`wagon_code`,`description`)
+SELECT 'ОП','Открытая платформа' WHERE NOT EXISTS (SELECT 1 FROM `wagon_types` WHERE `wagon_code`='ОП');
+INSERT INTO `wagon_types` (`wagon_code`,`description`)
+SELECT 'ДМ','Думпкар для перевозки щебня' WHERE NOT EXISTS (SELECT 1 FROM `wagon_types` WHERE `wagon_code`='ДМ');
+INSERT INTO `wagon_types` (`wagon_code`,`description`)
+SELECT 'КВ','Крытый вагон' WHERE NOT EXISTS (SELECT 1 FROM `wagon_types` WHERE `wagon_code`='КВ');
+INSERT INTO `wagon_types` (`wagon_code`,`description`)
+SELECT 'ЦС','Цистерна' WHERE NOT EXISTS (SELECT 1 FROM `wagon_types` WHERE `wagon_code`='ЦС');
+INSERT INTO `wagon_types` (`wagon_code`,`description`)
+SELECT 'ХП','Хоппер для сыпучих грузов' WHERE NOT EXISTS (SELECT 1 FROM `wagon_types` WHERE `wagon_code`='ХП');
+INSERT INTO `wagon_types` (`wagon_code`,`description`)
+SELECT 'ИЗ','Изотермический вагон' WHERE NOT EXISTS (SELECT 1 FROM `wagon_types` WHERE `wagon_code`='ИЗ');
+
+
+
+ALTER TABLE `employees`
+  ADD CONSTRAINT `chk_employee_birth_date` CHECK (YEAR(`birth_date`) BETWEEN 1960 AND 2005),
+  ADD CONSTRAINT `chk_employee_phone` CHECK (`phone` REGEXP '^\\+7 [0-9]{3} [0-9]{3} [0-9]{2} [0-9]{2}$'),
+  ADD CONSTRAINT `chk_employee_rating` CHECK (`rating` >= 0);
+
+ALTER TABLE `locomotives`
+  ADD CONSTRAINT `chk_locomotive_number` CHECK (`locomotive_number` REGEXP '^[А-ЯЁа-яёA-Za-z]{2}[0-9]{3}$');
+
+ALTER TABLE `wagons`
+  ADD CONSTRAINT `chk_wagon_number` CHECK (`wagon_number` REGEXP '^[А-ЯЁа-яёA-Za-z]{2}[0-9]{5}$');
+
 --
 -- Ограничения внешнего ключа сохраненных таблиц
 --
@@ -250,17 +293,17 @@ ALTER TABLE `wagon_types`
 -- Ограничения внешнего ключа таблицы `trains`
 --
 ALTER TABLE `trains`
-  ADD CONSTRAINT `idx_t_c_ac` FOREIGN KEY (`arrival_city_id`) REFERENCES `cities` (`city_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `idx_t_c_dc` FOREIGN KEY (`departure_city_id`) REFERENCES `cities` (`city_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `idx_t_e_a` FOREIGN KEY (`assistant_id`) REFERENCES `employees` (`employee_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `idx_t_e_d` FOREIGN KEY (`driver_id`) REFERENCES `employees` (`employee_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `idx_t_e_m` FOREIGN KEY (`manager_id`) REFERENCES `employees` (`employee_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `idx_t_c_ac` FOREIGN KEY (`arrival_city_id`) REFERENCES `cities` (`city_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `idx_t_c_dc` FOREIGN KEY (`departure_city_id`) REFERENCES `cities` (`city_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `idx_t_e_a` FOREIGN KEY (`assistant_id`) REFERENCES `employees` (`employee_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `idx_t_e_d` FOREIGN KEY (`driver_id`) REFERENCES `employees` (`employee_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `idx_t_e_m` FOREIGN KEY (`manager_id`) REFERENCES `employees` (`employee_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Ограничения внешнего ключа таблицы `train_locomotives`
 --
 ALTER TABLE `train_locomotives`
-  ADD CONSTRAINT `idx_tl_l` FOREIGN KEY (`locomotive_id`) REFERENCES `locomotives` (`locomotive_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `idx_tl_l` FOREIGN KEY (`locomotive_id`) REFERENCES `locomotives` (`locomotive_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   ADD CONSTRAINT `idx_tl_t` FOREIGN KEY (`train_id`) REFERENCES `trains` (`train_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
@@ -268,13 +311,13 @@ ALTER TABLE `train_locomotives`
 --
 ALTER TABLE `train_wagons`
   ADD CONSTRAINT `idx_tw_t` FOREIGN KEY (`train_id`) REFERENCES `trains` (`train_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `idx_tw_w` FOREIGN KEY (`wagon_id`) REFERENCES `wagons` (`wagon_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `idx_tw_w` FOREIGN KEY (`wagon_id`) REFERENCES `wagons` (`wagon_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 --
 -- Ограничения внешнего ключа таблицы `wagons`
 --
 ALTER TABLE `wagons`
-  ADD CONSTRAINT `wagons_ibfk_1` FOREIGN KEY (`wagon_type_id`) REFERENCES `wagon_types` (`wagon_type_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `wagons_ibfk_1` FOREIGN KEY (`wagon_type_id`) REFERENCES `wagon_types` (`wagon_type_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

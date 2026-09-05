@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 
 namespace RailwayApp.Models;
 
@@ -21,6 +22,7 @@ public class TrainDetails : Train
     public string ManagerName { get; set; } = string.Empty;
     public string DriverName { get; set; } = string.Empty;
     public string AssistantName { get; set; } = string.Empty;
+    public ObservableCollection<CompositionNode> CompositionNodes { get; set; } = [];
 }
 
 public class NewTrain

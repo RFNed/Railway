@@ -1,0 +1,277 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:RailwayApp.ViewModels"
+        xmlns:models="clr-namespace:RailwayApp.Models"
+        x:Class="Railway.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Паровозик — формирование грузовых составов"
+        Width="1280" Height="800"
+        MinWidth="1000" MinHeight="650"
+        FontFamily="Constantia"
+        Background="#FFFFFF">
+
+    <Window.Styles>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="#405C73"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="8,6"/>
+        </Style>
+        <Style Selector="DataGridRow">
+            <Setter Property="Foreground" Value="#405C73"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="#BFD6F6"/>
+            <Setter Property="Opacity" Value="0.55"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Foreground" Value="#405C73"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#405C73"/>
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Foreground" Value="#405C73"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#405C73"/>
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#405C73"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Padding" Value="12,7"/>
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#BFD6F6"/>
+            <Setter Property="Foreground" Value="#405C73"/>
+            <Setter Property="Padding" Value="12,7"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <Border Grid.Row="0" Background="#405C73" Padding="18">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Image Width="72" Height="36" Source="avares://Railway/Assets/logo.png" Stretch="Uniform"/>
+                    <StackPanel>
+                        <TextBlock Text="Паровозик" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <TextBlock Text="Система формирования грузовых составов" Foreground="#FFFFFF" Opacity="0.9"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Grid.Column="1" Classes="secondary" Content="Обновить данные" Command="{Binding LoadDataCommand}"/>
+            </Grid>
+        </Border>
+
+        <TabControl Grid.Row="1" Margin="10,10,10,0">
+            <TabItem Header="Составы">
+                <Grid RowDefinitions="*,Auto" Margin="0,10,0,0">
+                    <Grid ColumnDefinitions="2.4*,1*">
+                        <Border Grid.Column="0" BorderBrush="#BFD6F6" BorderThickness="2" CornerRadius="5" Margin="0,0,8,0">
+                            <DataGrid ItemsSource="{Binding Trains}" SelectedItem="{Binding SelectedTrain}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="№ состава" Binding="{Binding TrainNumber}" Width="100"/>
+                                    <DataGridTextColumn Header="Отправление" Binding="{Binding DepartureCityName}" Width="120"/>
+                                    <DataGridTextColumn Header="Назначение" Binding="{Binding ArrivalCityName}" Width="120"/>
+                                    <DataGridTextColumn Header="Формирование" Binding="{Binding FormationDatetime, StringFormat=dd.MM.yyyy HH:mm}" Width="145"/>
+                                    <DataGridTextColumn Header="Менеджер" Binding="{Binding ManagerName}" Width="*"/>
+                                    <DataGridTextColumn Header="Машинист" Binding="{Binding DriverName}" Width="*"/>
+                                    <DataGridTextColumn Header="Помощник" Binding="{Binding AssistantName}" Width="*"/>
+                                </DataGrid.Columns>
+                                <DataGrid.RowDetailsTemplate>
+                                    <!-- x:DataType обязателен: без него компилятор не может вывести тип
+                                         строки (TrainDetails) внутри RowDetailsTemplate, и любые прямые
+                                         Binding (например CompositionNodes) не резолвятся. -->
+                                    <DataTemplate x:DataType="models:TrainDetails">
+                                        <Border Background="#F4F8FD" BorderBrush="#BFD6F6" BorderThickness="0,1,0,1" Padding="10">
+                                            <Grid ColumnDefinitions="1.2*,1.8*">
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="Дерево состава" FontWeight="Bold" FontSize="14" Foreground="#405C73" Margin="0,0,0,6"/>
+                                                    <TreeView ItemsSource="{Binding CompositionNodes}" Height="155">
+                                                        <TreeView.ItemTemplate>
+                                                            <TreeDataTemplate ItemsSource="{Binding Children}">
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <TextBlock Text="{Binding Title}" Foreground="#405C73"/>
+                                                                    <TextBlock Text="{Binding Details}" Foreground="#405C73" Opacity="0.7"/>
+                                                                </StackPanel>
+                                                            </TreeDataTemplate>
+                                                        </TreeView.ItemTemplate>
+                                                    </TreeView>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Margin="20,0,0,0" Spacing="5">
+                                                    <TextBlock Text="Управление составом" FontWeight="Bold" FontSize="14" Foreground="#405C73"/>
+                                                    <TextBlock Text="Назначенные локомотивы (не более 2):" Foreground="#405C73"/>
+                                                    <!-- $parent[Window].DataContext.Свойство - единственный вариант,
+                                                         который Avalonia умеет проверять на этапе компиляции
+                                                         (в отличие от RelativeSource + DataContext.Свойство,
+                                                         который всегда падает в System.Object). -->
+                                                    <ListBox ItemsSource="{Binding $parent[Window].DataContext.AssignedLocomotives}" SelectedItem="{Binding $parent[Window].DataContext.SelectedLocomotive}" Height="55"/>
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <ComboBox Width="180" ItemsSource="{Binding $parent[Window].DataContext.FreeLocomotives}" SelectedItem="{Binding $parent[Window].DataContext.SelectedFreeLocomotive}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding LocomotiveNumber}" Foreground="#405C73"/></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                                                        <Button Classes="secondary" Content="Добавить" Command="{Binding $parent[Window].DataContext.AddLocomotiveCommand}"/>
+                                                        <Button Classes="secondary" Content="Удалить" Command="{Binding $parent[Window].DataContext.RemoveLocomotiveCommand}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding $parent[Window].DataContext.WagonStatistics}" Foreground="#405C73" FontWeight="Bold" TextWrapping="Wrap"/>
+                                                    <DataGrid ItemsSource="{Binding $parent[Window].DataContext.CompositionWagons}" SelectedItem="{Binding $parent[Window].DataContext.SelectedCompositionWagon}" AutoGenerateColumns="False" IsReadOnly="True" Height="105">
+                                                        <DataGrid.Columns>
+                                                            <DataGridTextColumn Header="№" Binding="{Binding WagonNumber}" Width="90"/>
+                                                            <DataGridTextColumn Header="Тип" Binding="{Binding WagonTypeCode}" Width="55"/>
+                                                            <DataGridTextColumn Header="Состояние" Binding="{Binding LoadStatus}" Width="90"/>
+                                                        </DataGrid.Columns>
+                                                    </DataGrid>
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Button Classes="secondary" Content="Переключить загрузку" Command="{Binding $parent[Window].DataContext.ToggleSelectedWagonCommand}"/>
+                                                        <Button Classes="secondary" Content="Удалить вагон" Command="{Binding $parent[Window].DataContext.RemoveSelectedWagonCommand}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <ComboBox Width="220" ItemsSource="{Binding $parent[Window].DataContext.FreeWagons}" SelectedItem="{Binding $parent[Window].DataContext.SelectedFreeWagon}">
+                                                            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding WagonNumber}" Foreground="#405C73"/></DataTemplate></ComboBox.ItemTemplate>
+                                                        </ComboBox>
+                                                        <Button Classes="secondary" Content="Добавить вагон" Command="{Binding $parent[Window].DataContext.AddWagonCommand}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGrid.RowDetailsTemplate>
+                            </DataGrid>
+                        </Border>
+
+                        <Border Grid.Column="1" Background="#BFD6F6" Padding="15" CornerRadius="5">
+                            <ScrollViewer>
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Состав" FontSize="18" FontWeight="Bold" Foreground="#405C73"/>
+                                    <TextBlock Text="Создание и редактирование записи" Foreground="#405C73"/>
+                                    <TextBlock Text="Номер состава" Foreground="#405C73"/>
+                                    <TextBox Text="{Binding EditNumber}" PlaceholderText="Например, ГС-101"/>
+                                    <TextBlock Text="Пункт отправления" Foreground="#405C73"/>
+                                    <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding SelectedDepCity}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Foreground="#405C73"/></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                                    <TextBlock Text="Пункт назначения" Foreground="#405C73"/>
+                                    <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding SelectedArrCity}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Foreground="#405C73"/></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                                    <TextBlock Text="Дата и время формирования" Foreground="#405C73"/>
+                                    <TextBox Text="{Binding EditFormation}" PlaceholderText="ДД.ММ.ГГГГ ЧЧ:ММ"/>
+                                    <TextBlock Text="Ответственный менеджер" Foreground="#405C73"/>
+                                    <ComboBox ItemsSource="{Binding Managers}" SelectedItem="{Binding SelectedManager}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Foreground="#405C73"/></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                                    <TextBlock Text="Машинист" Foreground="#405C73"/>
+                                    <ComboBox ItemsSource="{Binding Drivers}" SelectedItem="{Binding SelectedDriver}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Foreground="#405C73"/></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                                    <TextBlock Text="Помощник машиниста" Foreground="#405C73"/>
+                                    <ComboBox ItemsSource="{Binding Assistants}" SelectedItem="{Binding SelectedAssistant}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Foreground="#405C73"/></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+                                        <Button Classes="primary" Content="Новый состав" Command="{Binding NewTrainCommand}"/>
+                                        <Button Classes="primary" Content="Сохранить" Command="{Binding SaveTrainCommand}"/>
+                                        <Button Classes="secondary" Content="Удалить" Command="{Binding DeleteTrainCommand}"/>
+                                    </StackPanel>
+                                    
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Сотрудники">
+                <Grid ColumnDefinitions="1.6*,1*" Margin="0,10,0,0">
+                    <Border Grid.Column="0" BorderBrush="#BFD6F6" BorderThickness="2" CornerRadius="5" Margin="0,0,8,0">
+                        <DataGrid ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ФИО" Binding="{Binding LastName}" Width="*"/>
+                                <DataGridTextColumn Header="Имя" Binding="{Binding FirstName}" Width="*"/>
+                                <DataGridTextColumn Header="Отчество" Binding="{Binding MiddleName}" Width="*"/>
+                                <DataGridTextColumn Header="Дата рождения" Binding="{Binding BirthDate, StringFormat=dd.MM.yyyy}" Width="115"/>
+                                <DataGridTextColumn Header="Должность" Binding="{Binding JobTitle}" Width="90"/>
+                                <DataGridTextColumn Header="Телефон" Binding="{Binding Phone}" Width="125"/>
+                                <DataGridTextColumn Header="Рейтинг" Binding="{Binding Rating}" Width="65"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                    <Border Grid.Column="1" Background="#BFD6F6" Padding="15" CornerRadius="5">
+                        <ScrollViewer>
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Сотрудник" FontSize="18" FontWeight="Bold" Foreground="#405C73"/>
+                                <TextBlock Text="Форма добавления / редактирования" Foreground="#405C73"/>
+                                <TextBlock Text="Фамилия" Foreground="#405C73"/><TextBox Text="{Binding LastName}"/>
+                                <TextBlock Text="Имя" Foreground="#405C73"/><TextBox Text="{Binding FirstName}"/>
+                                <TextBlock Text="Отчество" Foreground="#405C73"/><TextBox Text="{Binding MiddleName}"/>
+                                <TextBlock Text="Дата рождения" Foreground="#405C73"/><TextBox Text="{Binding BirthDate}" PlaceholderText="ДД.ММ.ГГГГ"/>
+                                <TextBlock Text="Телефон" Foreground="#405C73"/><TextBox Text="{Binding Phone}" PlaceholderText="+7 XXX XXX XX XX"/>
+                                <TextBlock Text="Email" Foreground="#405C73"/><TextBox Text="{Binding Email}"/>
+                                <TextBlock Text="Должность" Foreground="#405C73"/>
+                                <ComboBox ItemsSource="{Binding JobTitles}" SelectedItem="{Binding JobTitle}"/>
+                                <TextBlock Text="Рейтинг рассчитывается автоматически по участию в составах." Foreground="#405C73" TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+                                    <Button Classes="primary" Content="Новый сотрудник" Command="{Binding NewEmployeeCommand}"/>
+                                    <Button Classes="primary" Content="Сохранить" Command="{Binding SaveEmployeeCommand}"/>
+                                    <Button Classes="secondary" Content="Удалить" Command="{Binding DeleteEmployeeCommand}"/>
+                                </StackPanel>
+                                <TextBlock Text="⚠ Удаление необратимо. Сотрудник, используемый в составе, удалить нельзя." Foreground="#8A6200" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Справочники">
+                <Grid ColumnDefinitions="1*,1*" Margin="0,10,0,0">
+                    <Border Grid.Column="0" BorderBrush="#BFD6F6" BorderThickness="2" CornerRadius="5" Margin="0,0,8,0">
+                        <Grid RowDefinitions="*,Auto" Margin="8">
+                            <DataGrid ItemsSource="{Binding Locomotives}" SelectedItem="{Binding SelectedLocomotive}" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns><DataGridTextColumn Header="ID" Binding="{Binding LocomotiveId}" Width="60"/><DataGridTextColumn Header="Номер локомотива" Binding="{Binding LocomotiveNumber}" Width="*"/></DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel Grid.Row="1" Spacing="6" Margin="0,8,0,0">
+                                <TextBlock Text="Локомотив: создание / редактирование / удаление" FontWeight="Bold" Foreground="#405C73"/>
+                                <TextBox Text="{Binding EditLocomotiveNumber}" PlaceholderText="ЛК349"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6"><Button Classes="primary" Content="Новый" Command="{Binding NewLocomotiveCommand}"/><Button Classes="primary" Content="Сохранить" Command="{Binding SaveLocomotiveCommand}"/><Button Classes="secondary" Content="Загрузить выбранный" Command="{Binding EditLocomotiveCommand}"/><Button Classes="secondary" Content="Удалить" Command="{Binding DeleteLocomotiveCommand}"/></StackPanel>
+                                <TextBlock Text="⚠ Удаление необратимо. Если локомотив используется в составе, БД может запретить операцию." Foreground="#8A6200" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Border Grid.Column="1" BorderBrush="#BFD6F6" BorderThickness="2" CornerRadius="5">
+                        <Grid RowDefinitions="*,Auto" Margin="8">
+                            <DataGrid ItemsSource="{Binding Wagons}" SelectedItem="{Binding SelectedWagon}" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns><DataGridTextColumn Header="ID" Binding="{Binding WagonId}" Width="55"/><DataGridTextColumn Header="Номер" Binding="{Binding WagonNumber}" Width="95"/><DataGridTextColumn Header="Тип" Binding="{Binding WagonTypeCode}" Width="55"/><DataGridTextColumn Header="Описание" Binding="{Binding TypeDescription}" Width="*"/></DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel Grid.Row="1" Spacing="6" Margin="0,8,0,0">
+                                <TextBlock Text="Вагон: создание / редактирование / удаление" FontWeight="Bold" Foreground="#405C73"/>
+                                <TextBox Text="{Binding EditWagonNumber}" PlaceholderText="ОП12345"/>
+                                <ComboBox ItemsSource="{Binding WagonTypes}" SelectedItem="{Binding SelectedWagonType}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding WagonCode}" Foreground="#405C73"/></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                                <StackPanel Orientation="Horizontal" Spacing="6"><Button Classes="primary" Content="Новый" Command="{Binding NewWagonCommand}"/><Button Classes="primary" Content="Сохранить" Command="{Binding SaveWagonCommand}"/><Button Classes="secondary" Content="Загрузить выбранный" Command="{Binding EditWagonCommand}"/><Button Classes="secondary" Content="Удалить" Command="{Binding DeleteWagonCommand}"/></StackPanel>
+                                <TextBlock Text="⚠ Удаление необратимо. Если вагон входит в состав, операция должна быть запрещена ограничениями БД." Foreground="#8A6200" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Отчёты и алгоритмы">
+                <Grid ColumnDefinitions="1*,1*" Margin="0,10,0,0">
+                    <Border Grid.Column="0" Background="#BFD6F6" CornerRadius="5" Padding="20" Margin="0,0,8,0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Алгоритм подсчёта вагонов" FontSize="18" FontWeight="Bold" Foreground="#405C73"/>
+                            <TextBlock Text="Для выбранного состава в дереве таблицы отображаются все вагоны и их признак загрузки. Количество и проценты рассчитываются алгоритмом TrainAlgorithms." TextWrapping="Wrap" Foreground="#405C73"/>
+                            <TextBlock Text="{Binding WagonStatistics}" Foreground="#405C73" FontWeight="Bold"/>
+                            <TextBlock Text="Требование ТЗ: количество загруженных, количество пустых, % загруженных и % пустых от общего количества." TextWrapping="Wrap" Foreground="#405C73"/>
+                            <TextBlock Text="Тесты алгоритма вынесены в отдельный xUnit-проект Railway.Tests." FontWeight="Bold" Foreground="#405C73"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Background="#BFD6F6" CornerRadius="5" Padding="20">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Составы конкретного менеджера" FontSize="18" FontWeight="Bold" Foreground="#405C73"/>
+                            <TextBlock Text="Менеджер" Foreground="#405C73"/>
+                            <ComboBox ItemsSource="{Binding Managers}" SelectedItem="{Binding SelectedManager}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" Foreground="#405C73"/></DataTemplate></ComboBox.ItemTemplate></ComboBox>
+                            <TextBlock Text="Начало периода (ДД.ММ.ГГГГ)" Foreground="#405C73"/>
+                            <TextBox Text="{Binding ReportFrom}"/>
+                            <TextBlock Text="Конец периода (ДД.ММ.ГГГГ)" Foreground="#405C73"/>
+                            <TextBox Text="{Binding ReportTo}"/>
+                            <Button Classes="primary" Content="Рассчитать отчёт" Command="{Binding CalculateReportCommand}"/>
+                            <Border Background="#FFFFFF" Padding="12" CornerRadius="4">
+                                <TextBlock Text="{Binding ReportManagerResult}" Foreground="#405C73" TextWrapping="Wrap"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <Border Grid.Row="3" Background="{Binding StatusBackground}" Padding="10">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#FFFFFF" TextWrapping="Wrap"/>
+        </Border>
+    </Grid>
+</Window>
