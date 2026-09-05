@@ -8,3 +8,15 @@ public class WagonType
     public string WagonCode { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 }
+
+public class NewWagonType
+{
+    public string WagonCode { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
+
+public class UpdateWagonType
+{
+    public string WagonCode { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
