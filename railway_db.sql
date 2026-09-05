@@ -85,7 +85,7 @@ CREATE TABLE `trains` (
 --
 
 CREATE TABLE `train_locomotives` (
-  `train_locomotives_id` int NOT NULL,
+  `train_locomotive_id` int NOT NULL,
   `train_id` int NOT NULL,
   `locomotive_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -165,7 +165,7 @@ ALTER TABLE `trains`
 -- Индексы таблицы `train_locomotives`
 --
 ALTER TABLE `train_locomotives`
-  ADD PRIMARY KEY (`train_locomotives_id`),
+  ADD PRIMARY KEY (`train_locomotive_id`),
   ADD KEY `train_id` (`train_id`),
   ADD KEY `locomotive_id` (`locomotive_id`);
 
@@ -222,7 +222,7 @@ ALTER TABLE `trains`
 -- AUTO_INCREMENT для таблицы `train_locomotives`
 --
 ALTER TABLE `train_locomotives`
-  MODIFY `train_locomotives_id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `train_locomotive_id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT для таблицы `train_wagons`

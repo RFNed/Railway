@@ -8,3 +8,9 @@ public class TrainLocomotive
     public int TrainId { get; set; }
     public int LocomotiveId { get; set; }
 }
+
+public class NewTrainLocomotive
+{
+    public int TrainId { get; set; }
+    public int LocomotiveId { get; set; }
+}
