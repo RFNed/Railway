@@ -16,7 +16,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly DatabaseService _dbService;
 
     [ObservableProperty]
-    private ObservableCollection<Train> _trains = [];
+    private ObservableCollection<TrainDetails> _trains = [];
 
     [ObservableProperty]
     private Train? _selectedTrain;

@@ -71,25 +71,27 @@ public class EmployeeRepository
     {
         await conn.OpenAsync();
 
-        const string query = @"INSERT INTO employees (
-            last_name,
-            first_name,
-            middle_name,
-            birth_date,
-            phone,
-            email,
-            job_title,
-            rating
-        ) VALUES (
-            @lastName,
-            @firstName,
-            @middleName,
-            @birthDate,
-            @phone,
-            @email,
-            @jobTitle,
-            0
-        )";
+        const string query = @"
+            INSERT INTO employees (
+                last_name,
+                first_name,
+                middle_name,
+                birth_date,
+                phone,
+                email,
+                job_title,
+                rating
+            ) VALUES (
+                @lastName,
+                @firstName,
+                @middleName,
+                @birthDate,
+                @phone,
+                @email,
+                @jobTitle,
+                0
+            );
+        ";
 
         await using var cmd = new MySqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@lastName", newEmployee.LastName);

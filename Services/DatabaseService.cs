@@ -17,9 +17,9 @@ public class DatabaseService
 
     private MySqlConnection GetConnection() => new(_connectionString);
     
-    public async Task<List<Train>> GetTrainsAsync()
+    public async Task<List<TrainDetails>> GetTrainsAsync()
     {
-        var result = new List<Train>();
+        var result = new List<TrainDetails>();
         await using var connection = GetConnection();
         await connection.OpenAsync();
 
